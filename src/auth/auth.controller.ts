@@ -1,6 +1,6 @@
-import { Controller, Request, Post, UseGuards, Get, Body, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Request, Post, UseGuards, Get, Body, ValidationPipe } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LocalAuthGuard } from './local-auth.guard';
 
@@ -8,26 +8,22 @@ import { LocalAuthGuard } from './local-auth.guard';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Post('/register')
-  async register(@Res() res, @Body() createUserDTO: CreateUserDto) {
-    if(await this.authService.isUserExists(createUserDTO)){
-      return res.status(HttpStatus.BAD_REQUEST).json({
-          message: "User already exists"
-      })
-    }
-    const user = await this.authService.create(createUserDTO);
-    return res.status(HttpStatus.OK).json({ user })
+  @Post('/signup')
+  async signUp(
+    @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto
+  ): Promise<void> {
+    return await this.authService.signUp(authCredentialsDto);
   }
 
   @UseGuards(LocalAuthGuard)
-  @Post('login')
-  async login(@Request() req) {
-    return this.authService.login(req.user);
+  @Post('signin')
+  async signIn(@Request() req) {
+    return this.authService.signIn(req.user);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  getProfile(@Request() req) {
+  @Get('me')
+  getMe(@Request() req) {
     return req.user;
   }
 }

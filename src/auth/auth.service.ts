@@ -1,48 +1,54 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
+import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
-import { CreateUserDto } from './dto/create-user.dto';
-import { User, UserDocument } from './user.schema';
+import { AuthCredentialsDto } from './dto/auth-credentials.dto';
+import { User } from './user.schema';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel('User') private userModel: Model<User>,
     private jwtService: JwtService
   ) {}
 
-  async validateUser(username: string, pass: string): Promise<any> {
-    const user = await this.findOne(username);
-    if (user && user.password === pass) {
-      const { password, ...result } = user;
-      return result;
+  async signUp(authCredentialsDto: AuthCredentialsDto): Promise<any> {
+    const { username, password } = authCredentialsDto;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new this.userModel({ username, password: hashedPassword });
+
+    try {
+      await user.save();
+      return this.generateAccessToken(user);
+    } catch (error) {
+      if (error.code === 11000) {
+        throw new ConflictException('User already exists');
+      }
+      throw error;
     }
-    return null;
   }
 
-  async login(user: any) {
-    const payload = { username: user.username, sub: user.userId };
+  signIn(user: User) {
+    return this.generateAccessToken(user);
+  }
+
+  async validateUser(username: string, pass: string): Promise<User> {
+    const user = await this.userModel.findOne({ username });
+
+    if (!user) {
+      return null;
+    }
+
+    const valid = await bcrypt.compare(pass, user.password);
+
+    return valid ? user : null
+  }
+
+  generateAccessToken(user: User) {
+    const payload = { username: user.username, sub: (user as any)._id }; // TODO any
     return {
-      access_token: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload),
     };
-  }
-
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    const createdUser = new this.userModel(createUserDto);
-    return createdUser.save();
-  }
-
-  async isUserExists(createUserDTO: CreateUserDto): Promise<boolean> {
-    const user = await this.userModel.findOne({ username: createUserDTO.username });
-    return !!user;
-  }
-
-  async findAll(): Promise<User[]> {
-    return this.userModel.find().exec();
-  }
-
-  async findOne(username: string): Promise<User | undefined> {
-    return this.userModel.find(user => user.username === username);
   }
 }
