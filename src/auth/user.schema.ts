@@ -1,9 +1,14 @@
+import { Prop, Schema } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 
-export interface User extends Document {
-  readonly username: string;
-  readonly password: string;
-}
+@Schema()
+export class User extends mongoose.Document {
+  @Prop({ required: true })
+  username: string;
+
+  @Prop({ required: true })
+  password: string;
+};
 
 export const UserSchema = new mongoose.Schema({
   username: {

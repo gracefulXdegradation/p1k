@@ -9,7 +9,7 @@ import { User } from './user.schema';
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel('User') private userModel: Model<User>,
+    @InjectModel(User.name) private userModel: Model<User>,
     private jwtService: JwtService
   ) {}
 
@@ -45,7 +45,7 @@ export class AuthService {
     return valid ? user : null
   }
 
-  generateAccessToken(user: User) {
+  private generateAccessToken(user: User) {
     const payload = { username: user.username, sub: (user as any)._id }; // TODO any
     return {
       accessToken: this.jwtService.sign(payload),
