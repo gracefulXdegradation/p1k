@@ -25,7 +25,7 @@ export class MessagesController {
     @Body(ValidationPipe) { text }: PostMessageDto
   ) {
     const user = await this.authService.findUser(username);
-    const message = await this.messagesService.post(text);
+    const message = await this.messagesService.post(text, req.user, user);
     return message;
   }
 }

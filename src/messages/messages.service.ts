@@ -9,8 +9,8 @@ export class MessagesService {
     @InjectModel(Message.name) private messagesModel: Model<Message>,
   ) {}
 
-  async post(text: string): Promise<any> {
-    const message = new this.messagesModel({ text });
+  async post(text: string, from, to): Promise<any> {
+    const message = new this.messagesModel({ text, from, to });
 
     try {
       await message.save();
