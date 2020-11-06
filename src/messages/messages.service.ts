@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { User } from 'src/auth/user.schema';
+import { MessageDto } from './dto/message.dto';
+import { GroupedMessagesDto } from './dto/user-messages.dto';
 import { Message } from './message.schema';
 
 @Injectable()
@@ -9,7 +12,8 @@ export class MessagesService {
     @InjectModel(Message.name) private messagesModel: Model<Message>,
   ) {}
 
-  async findMessages(to) {
+  async findMessages(to: User): Promise<GroupedMessagesDto> {
+    // TODO sort by post date
     return await this.messagesModel.aggregate([
       { $match: { "to.username": to.username } },
       { $group:
@@ -21,14 +25,8 @@ export class MessagesService {
     ])
   }
 
-  async post(text: string, from, to): Promise<any> {
+  async post(text: string, from: User, to: User): Promise<MessageDto> {
     const message = new this.messagesModel({ text, from, to });
-
-    try {
-      await message.save();
-      return message
-    } catch (error) {
-      throw error;
-    }
+    return await message.save();
   }
 }
