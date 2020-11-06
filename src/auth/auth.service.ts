@@ -34,7 +34,7 @@ export class AuthService {
   }
 
   async validateUser(username: string, pass: string): Promise<User> {
-    const user = await this.userModel.findOne({ username });
+    const user = await this.findUser(username);
 
     if (!user) {
       return null;
@@ -43,6 +43,10 @@ export class AuthService {
     const valid = await bcrypt.compare(pass, user.password);
 
     return valid ? user : null
+  }
+
+  findUser(username: string): Promise<User | undefined> {
+    return this.userModel.findOne({ username });
   }
 
   private generateAccessToken(user: User) {
