@@ -23,10 +23,10 @@ export const MessageSchema = new mongoose.Schema({
   text: String,
   from: {
     _id: String,
-    username: mongoose.Schema.ObjectId
+    username: String
   },
   to: {
     _id: String,
-    username: mongoose.Schema.ObjectId
+    username: String
   },
 });

@@ -14,7 +14,7 @@ export class MessagesController {
   @UseGuards(JwtAuthGuard)
   @Get()
   getMessages(@Request() req) {
-    return req.user;
+    return this.messagesService.findMessages(req.user);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -9,6 +9,18 @@ export class MessagesService {
     @InjectModel(Message.name) private messagesModel: Model<Message>,
   ) {}
 
+  async findMessages(to) {
+    return await this.messagesModel.aggregate([
+      { $match: { "to.username": to.username } },
+      { $group:
+        {
+          _id: "$from.username",
+          messages: { $push: "$text" }
+        }
+      }
+    ])
+  }
+
   async post(text: string, from, to): Promise<any> {
     const message = new this.messagesModel({ text, from, to });
 
